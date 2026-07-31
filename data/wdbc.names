@@ -1,0 +1,141 @@
+1. Título: Wisconsin Diagnostic Breast Cancer (WDBC)
+
+2. Informações sobre a fonte
+
+a) Autores: 
+
+    Dr. William H. Wolberg, Departamento de Cirurgia Geral, Universidade de
+    Wisconsin, Centro de Ciências Clínicas, Madison, WI 53792
+    wolberg@eagle.surgery.wisc.edu
+
+	W. Nick Street, Departamento de Ciências da Computação, Universidade de
+    Wisconsin, 1210 West Dayton St., Madison, WI 53706
+    street@cs.wisc.edu  608-262-6619
+
+	Olvi L. Mangasarian, Departamento de Ciências da Computação, Universidade de
+    Wisconsin, 1210 West Dayton St., Madison, WI 53706
+    olvi@cs.wisc.edu 
+
+b) Doador: Nick Street
+
+c) Data: novembro de 1995
+
+3. Uso anterior:
+
+primeiro uso:
+
+	W.N. Street, W.H. Wolberg e O.L. Mangasarian 
+    Extração de características nucleares para o diagnóstico de tumores de mama.
+    Simpósio Internacional IS&T/SPIE 1993 sobre Imagem Eletrônica: Ciência
+    e Tecnologia, volume 1905, páginas 861-870, San Jose, CA, 1993.
+
+Literatura de Pesquisa Operacional:
+
+	O.L. Mangasarian, W.N. Street e W.H. Wolberg. 
+    Diagnóstico e prognóstico do câncer de mama por meio de programação linear. 
+    Operations Research, 43(4), páginas 570-577, julho-agosto de 1995.
+
+Literatura médica:
+
+	W.H. Wolberg, W.N. Street e O.L. Mangasarian. 
+    Técnicas de aprendizado de máquina para diagnosticar o câncer de mama a partir de
+    aspirados por agulha fina.  
+    Cancer Letters 77 (1994) 163-171.
+
+    W.H. Wolberg, W.N. Street e O.L. Mangasarian. 
+	Análise de imagens e aprendizado de máquina aplicados ao diagnóstico
+    e prognóstico do câncer de mama.  
+    Analytical and Quantitative Cytology and Histology, vol. 17,
+    n.º 2, páginas 77-87, abril de 1995. 
+
+W.H. Wolberg, W.N. Street, D.M. Heisey e O.L. Mangasarian. 
+    Diagnóstico e prognóstico computadorizados do câncer de mama a partir de
+    aspirados por agulha fina.  
+    Archives of Surgery 1995;130:511-516.
+
+	W.H. Wolberg, W.N. Street, D.M. Heisey e O.L. Mangasarian. 
+    Características nucleares derivadas por computador distinguem a citologia mamária maligna da
+    benigna.  
+    Human Pathology, 26:792--796, 1995.
+
+Veja também:
+    http://www.cs.wisc.edu/~olvi/uwmp/mpml.html
+    http://www.cs.wisc.edu/~olvi/uwmp/cancer.html
+
+Resultados:
+
+    - campo de previsão 2, diagnóstico: B = benigno, M = maligno
+    - os conjuntos são linearmente separáveis utilizando todas as 30 características de entrada
+	- a melhor precisão preditiva foi obtida utilizando um plano de separação
+        no espaço 3D de “Pior Área”, “Pior Suavidade” e
+        “Textura Média”.  Precisão estimada em 97,5% por meio de
+        validações cruzadas repetidas em 10 dobras.  O classificador diagnosticou corretamente
+        176 novos pacientes consecutivos até novembro
+        de 1995. 
+
+4. Informações relevantes
+
+    As características são calculadas a partir de uma imagem digitalizada de uma
+    aspiração por agulha fina (FNA) de uma massa mamária.  Elas descrevem
+    as características dos núcleos celulares presentes na imagem.
+    Algumas dessas imagens podem ser encontradas em
+    http://www.cs.wisc.edu/~street/images/
+
+	O plano de separação descrito acima foi obtido utilizando o
+    Método Multissuperfície-Árvore (MSM-T) [K. P. Bennett, “Construção de Árvores de Decisão
+    por meio de Programação Linear”. Anais da 4ª
+    Sociedade de Inteligência Artificial e Ciência Cognitiva do Meio-Oeste,
+    pp. 97-101, 1992], um método de classificação que utiliza programação
+    linear para construir uma árvore de decisão.  As características relevantes
+    foram selecionadas por meio de uma busca exaustiva no espaço de 1 a 4
+    características e de 1 a 3 planos de separação.
+
+	O programa linear efetivamente utilizado para obter o plano de separação
+    no espaço tridimensional é aquele descrito em:
+    [K. P. Bennett e O. L. Mangasarian: “Robust Linear
+    Programming Discrimination of Two Linearly Inseparable Sets”,
+    Optimization Methods and Software 1, 1992, 23-34].
+
+
+	Este banco de dados também está disponível através do servidor FTP do Departamento de Ciência da Computação da UW:
+
+    ftp ftp.cs.wisc.edu
+    cd math-prog/cpo-dataset/machine-learn/WDBC/
+
+5. Número de instâncias: 569 
+
+6. Número de atributos: 32 (ID, diagnóstico, 30 características de entrada com valores reais)
+
+7. Informações sobre os atributos
+
+1) Número de identificação
+2) Diagnóstico (M = maligno, B = benigno)
+3-32)
+
+Dez características de valor real são calculadas para cada núcleo celular:
+
+    a) raio (média das distâncias do centro aos pontos no perímetro)
+    b) textura (desvio padrão dos valores da escala de cinza)
+    c) perímetro
+    d) área
+    e) suavidade (variação local nos comprimentos dos raios)
+	f) compactação (perímetro² / área - 1,0)
+    g) concavidade (intensidade das porções côncavas do contorno)
+    h) pontos côncavos (número de porções côncavas do contorno)
+    i) simetria 
+    j) dimensão fractal (“aproximação da linha costeira” - 1)
+
+Vários dos artigos listados acima contêm descrições detalhadas de
+como essas características são calculadas. 
+
+A média, o erro-padrão e o “pior” ou maior valor (média dos três
+maiores valores) dessas características foram calculados para cada imagem,
+resultando em 30 características. Por exemplo, o campo 3 é o Raio Médio, o campo
+13 é o Desvio Padrão do Raio e o campo 23 é o Pior Raio.
+
+Todos os valores das características são recodificados com quatro dígitos significativos.
+
+8. Valores de atributos ausentes: nenhum
+
+9. Distribuição por classe: 357 benignos, 212 malignos
+
