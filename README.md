@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner_projeto.jpg" alt="Breast Cancer Classification - Machine Learning" width="100%">
+  <img src="assets/banner.jpg" alt="Breast Cancer Classification - Machine Learning" width="100%">
 </p>
 
 
