@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.jpg" alt="Breast Cancer Classification - Machine Learning" width="100%">
+</p>
+
 # 🩺 Breast Cancer Classification — Machine Learning
 
 Projeto de **Machine Learning para classificação de tumores mamários como benignos ou malignos**, usando o **Breast Cancer Wisconsin Diagnostic Dataset (WDBC)**.
