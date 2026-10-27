@@ -5,306 +5,106 @@
 
 # 🩺 Breast Cancer Classification — Machine Learning
 
-Projeto de **Machine Learning para classificação de tumores mamários como benignos ou malignos**, desenvolvido utilizando o **Breast Cancer Wisconsin Diagnostic Dataset**.
+Projeto de Machine Learning para classificação de tumores mamários como benignos ou malignos, usando o Breast Cancer Wisconsin Diagnostic Dataset (WDBC).
 
-O objetivo foi comparar diferentes algoritmos de classificação, avaliar seus desempenhos e utilizar técnicas de **Explainable AI (XAI)** para compreender quais características mais influenciam as previsões do modelo.
+O foco é detectar o máximo possível de casos malignos (recall), comparando três algoritmos, interpretando o que sustenta as previsões e avaliando com cuidado o que os resultados realmente permitem concluir.
 
-> ⚠️ **Aviso:** este projeto possui finalidade exclusivamente educacional e de demonstração de técnicas de Machine Learning. O modelo não deve ser utilizado para diagnóstico médico real.
+⚠️ Aviso: projeto com finalidade exclusivamente educacional. O modelo não deve ser utilizado para diagnóstico médico real e não passou por validação clínica.
 
----
+🎯 Objetivo
 
-## 🎯 Objetivo
+Classificar tumores como 🟢 Benigno (0) ou 🔴 Maligno (1) e responder:
 
-Desenvolver e avaliar modelos capazes de classificar tumores como:
+Quais grupos de características (tamanho, concavidade) sustentam a previsão?
+Os modelos se distinguem de forma estatisticamente relevante?
+Ajustar o limiar de decisão reduz os malignos não detectados? A que custo?
+📊 Dataset
 
-* 🟢 **Benigno**
-* 🔴 **Maligno**
+Breast Cancer Wisconsin Diagnostic Dataset (WDBC): 569 pacientes (37% malignos), sem valores ausentes, com 30 características morfológicas dos núcleos celulares (média, erro padrão e pior valor de raio, textura, área, concavidade etc.). Arquivos em data/.
 
-Além do desempenho preditivo, o projeto também busca compreender **como o modelo toma suas decisões**, utilizando SHAP para análise de interpretabilidade.
+🧪 Metodologia
+Análise exploratória e divisão treino/teste estratificada (70/30; teste com 171 pacientes, 64 malignos).
+Modelos: Regressão Logística (com StandardScaler), Random Forest e XGBoost (padrão e com ajuste de hiperparâmetros).
+Interpretação: odds ratio com intervalo de confiança (bootstrap), VIF, SHAP e permutation importance (individual e em grupo) nos três modelos.
+Validação cruzada estratificada de 5 folds, inclusive por cenários e blocos de variáveis.
+Teste exato de McNemar entre modelos.
+Ajuste do limiar de decisão escolhido apenas com o treino (validação cruzada) e confirmado uma única vez no teste.
+🔍 Principais resultados
+Desempenho em validação cruzada (5 folds, 569 pacientes)
+Modelo	Acurácia	Precisão	Recall	F1	ROC-AUC
+Regressão Logística	0,9737	0,9863	0,9436	0,9633	0,9953
+Random Forest	0,9526	0,9461	0,9295	0,9355	0,9895
+XGBoost	0,9613	0,9588	0,9389	0,9473	0,9936
+XGBoost otimizado	0,9666	0,9583	0,9528	0,9547	0,9936
 
----
+As diferenças de AUC são menores que os desvios padrão; os modelos empatam na capacidade de separar as classes. O recall varia entre 0,93 e 0,95 nos quatro.
 
-## 📊 Dataset
+Tamanho e concavidade se complementam
 
-Foi utilizado o **Breast Cancer Wisconsin Diagnostic Dataset (WDBC)**.
+Combinar os blocos de tamanho e concavidade melhorou o AUC em cerca de 0,01 a 0,04 em relação a cada bloco isolado, nos três modelos. Como as diferenças são próximas dos desvios, isso é um indício, não uma prova. Pela forte colinearidade (VIF de até 3995), a leitura segura é por bloco, não por variável isolada.
 
-O dataset contém características computadas a partir de imagens digitalizadas de biópsias, relacionadas à morfologia dos núcleos celulares.
+Os modelos não se distinguem estatisticamente
 
-A variável alvo representa:
+O McNemar (limiar 0,5, 171 pacientes) não encontrou diferença entre XGBoost e Regressão Logística (p = 0,6875), nem entre Random Forest e Regressão Logística (p = 1,0). Isso indica ausência de evidência de diferença, não equivalência: o teste tem baixo poder.
 
-* `0` → Benigno
-* `1` → Maligno
+Ajuste do limiar de decisão
 
-Os arquivos originais do dataset estão disponíveis na pasta:
+O limiar foi escolhido só com o treino: baixar de 0,5 para 0,3 reduziu os malignos perdidos de 7 para 4 (de 148), ao custo de 10 falsos alarmes (de 250). Resultado no teste:
 
-```text
-data/
-├── wdbc.data
-└── wdbc.names
-```
+Modelo (teste, 64 malignos)	Limiar	FN	FP	Recall	Precisão
+Regressão Logística	0,5	4	1	93,75%	98,36%
+Regressão Logística	0,3	2	1	96,88%	98,41%
+Random Forest	0,5	4	0	93,75%	100%
+XGBoost	0,5	3	0	95,31%	100%
+XGBoost otimizado	0,5	3	0	95,31%	100%
 
----
+O ganho do limiar é de 2 pacientes. O intervalo de confiança de 95% do recall da LR a 0,3 vai de cerca de 89% a 99%, e o do XGBoost, de 87% a 98%: eles se sobrepõem, então o teste não permite afirmar que um modelo é melhor que o outro.
 
-## 🔬 Modelos avaliados
+🏆 Modelo final
 
-Foram utilizados três algoritmos de classificação:
+Regressão Logística (StandardScaler) com limiar 0,3, pela interpretabilidade do sentido dos efeitos, baixo custo computacional, simplicidade de manutenção e recall competitivo.
 
-### Logistic Regression
+⚠️ Limitações
+O teste tem 64 malignos: trocar 1 ou 2 pacientes muda o recall em 1,6 a 3,1 pontos percentuais.
+O limiar 0,3 se apoia em poucos erros na validação cruzada (4 a 7 malignos perdidos).
+Os coeficientes individuais são instáveis (colinearidade e intervalos sobrepostos).
+O limiar do XGBoost não foi ajustado, então a comparação com a LR a 0,3 não é totalmente simétrica.
+Os hiperparâmetros do XGBoost foram escolhidos com os dados inteiros, o que deixa o resultado otimista.
+📈 Visualizações
+Recall da classe maligna no teste
 
-Utilizado como modelo baseline por sua simplicidade e interpretabilidade.
+Recall no teste
 
-### Random Forest
+Eixo truncado em 85% para destacar as diferenças. Com 64 malignos no teste, cada paciente vale 1,56 ponto percentual.
 
-Modelo baseado em múltiplas árvores de decisão, capaz de capturar relações não lineares entre as variáveis.
+SHAP dos três modelos
 
-### XGBoost
+Cada ponto é um paciente: à direita empurra a previsão para maligno, à esquerda para benigno. Os valores do Random Forest estão em probabilidade e os da Regressão Logística e do XGBoost em log-odds, então só a ordem das variáveis é comparável entre eles.
 
-Algoritmo baseado em Gradient Boosting, utilizado para capturar relações mais complexas nos dados.
+Regressão Logística	Random Forest	XGBoost
+SHAP LR	SHAP RF	SHAP XGB
+🛠️ Tecnologias
 
-Após a comparação dos modelos, foi realizada uma **otimização dos hiperparâmetros do XGBoost**.
+Python · Pandas · NumPy · Scikit-learn · XGBoost · SHAP · Statsmodels · Seaborn · Matplotlib · Jupyter Notebook
 
----
-
-## ⚙️ XGBoost Otimizado
-
-Os principais hiperparâmetros utilizados foram:
-
-```python
-{
-    "colsample_bytree": 0.8,
-    "learning_rate": 0.1,
-    "max_depth": 4,
-    "n_estimators": 300,
-    "subsample": 0.8
-}
-```
-
----
-
-## 🏆 Resultados
-
-O XGBoost otimizado apresentou os seguintes resultados no conjunto de teste:
-
-| Métrica   |  Resultado |
-| --------- | ---------: |
-| Accuracy  | **97,19%** |
-| Precision | **96,72%** |
-| Recall    | **95,76%** |
-| F1-Score  | **96,18%** |
-| ROC-AUC   | **99,43%** |
-
-O **Recall de 95,76% para a classe maligna** indica que o modelo identificou corretamente a maior parte dos casos malignos presentes no conjunto de teste.
-
----
-
-## 📈 Comparação dos Modelos
-
-A comparação foi realizada utilizando diferentes métricas de avaliação, incluindo Accuracy, Precision, Recall, F1-Score e ROC-AUC.
-
-### Comparação de desempenho
-
-![Comparação dos modelos](images/comparacao%20dos%20modelos.png)
-
-### Recall da classe maligna
-
-O Recall foi analisado com atenção especial devido à importância de identificar corretamente os casos malignos.
-
-![Recall dos modelos](images/recall.png)
-
----
-
-## 🎯 Matriz de Confusão
-
-A matriz de confusão permite visualizar os acertos e erros do XGBoost otimizado.
-
-![Matriz de Confusão](images/matriz%20de%20confusao.png)
-
-A matriz apresenta:
-
-* **True Positive (TP):** casos malignos corretamente classificados.
-* **True Negative (TN):** casos benignos corretamente classificados.
-* **False Positive (FP):** casos benignos classificados como malignos.
-* **False Negative (FN):** casos malignos classificados como benignos.
-
-Os **falsos negativos** são especialmente importantes na análise, pois representam casos malignos que não foram identificados pelo modelo.
-
----
-
-## 🔎 Explainable AI — SHAP
-
-Para compreender o comportamento do XGBoost, foi utilizada a técnica **SHAP (SHapley Additive exPlanations)**.
-
-O SHAP permite analisar:
-
-* quais características possuem maior influência;
-* como valores altos ou baixos das características afetam as previsões;
-* quais variáveis contribuem para aumentar ou diminuir a saída do modelo.
-
-### SHAP Summary Plot
-
-![SHAP Summary Plot](images/shap.png)
-
-O gráfico permite observar simultaneamente a **importância das características** e a **direção de seus impactos nas previsões**.
-
----
-
-## 🎬 SHAP Animation
-
-Além do gráfico estático, foi desenvolvida uma animação para visualizar de forma dinâmica a contribuição das principais características nas previsões do modelo.
-
-![SHAP Animation](animation/shap_top10_breast_cancer.gif)
-
----
-
-## 🧠 Pipeline do Projeto
-
-```text
-Dataset
-   ↓
-Análise exploratória
-   ↓
-Pré-processamento
-   ↓
-Separação treino / teste
-   ↓
-Treinamento dos modelos
-   ↓
-Comparação de desempenho
-   ↓
-Otimização do XGBoost
-   ↓
-Avaliação final
-   ↓
-Explainable AI — SHAP
-```
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-* 🐍 **Python**
-* 🐼 **Pandas**
-* 🔢 **NumPy**
-* 🤖 **Scikit-learn**
-* 🚀 **XGBoost**
-* 🔍 **SHAP**
-* 📊 **Matplotlib**
-* 📓 **Jupyter Notebook**
-* 🧑‍🎨 **SEABORN**
-
----
-
-## 📂 Estrutura do Projeto
-
-```text
+📂 Estrutura
 Breast-Cancer-Classification/
-│
 ├── README.md
 ├── LICENSE
-├── .gitignore
-│
-├── data/
-│   ├── wdbc.data
-│   └── wdbc.names
-│
+├── data/            # wdbc.data, wdbc.names
 ├── images/
-│   ├── comparacao dos modelos.png
-│   ├── matriz de confusao.png
-│   ├── recall.png
-│   └── shap.png
-│
 ├── animation/
-│   └── shap_top10_breast_cancer.gif
-│
-└── notebook/
-    └── breast_cancer.ipynb
-```
-
----
-
-## 🚀 Como Executar
-
-### 1. Clone o repositório
-
-```bash
+└── notebook/        # breast_cancer.ipynb
+🚀 Como executar
+bash
 git clone https://github.com/Jonatan-Trindade/Breast-Cancer-Classification.git
-```
-
-### 2. Entre na pasta
-
-```bash
 cd Breast-Cancer-Classification
-```
-
-### 3. Crie um ambiente virtual
-
-```bash
 python -m venv .venv
-```
+.venv\Scripts\activate        # Windows
+pip install pandas numpy scikit-learn xgboost shap seaborn matplotlib statsmodels jupyter
 
-### 4. Ative o ambiente virtual
+Abra notebook/breast_cancer.ipynb e execute as células.
 
-No Windows:
+👨‍💻 Autor
 
-```bash
-.venv\Scripts\activate
-```
-
-### 5. Instale as dependências
-
-```bash
-pip install pandas numpy scikit-learn xgboost shap matplotlib jupyter
-```
-
-### 6. Execute o notebook
-
-Abra:
-
-```text
-notebook/breast_cancer.ipynb
-```
-
-e execute as células para reproduzir a análise, treinamento e avaliação dos modelos.
-
----
-
-## 📌 Principais Aprendizados
-
-Durante o desenvolvimento deste projeto foram explorados conceitos de:
-
-* classificação supervisionada;
-* análise e preparação de dados;
-* treinamento de modelos de Machine Learning;
-* comparação de algoritmos;
-* avaliação por múltiplas métricas;
-* otimização de hiperparâmetros;
-* matriz de confusão;
-* ROC-AUC;
-* análise de Recall;
-* importância de variáveis;
-* Explainable AI;
-* interpretação de modelos utilizando SHAP.
-
----
-
-## 🔮 Próximos Passos
-
-* [ ] Criar uma aplicação web utilizando Streamlit;
-* [ ] Disponibilizar o modelo através de uma API;
-* [ ] Criar uma interface para realizar previsões;
-* [ ] Adicionar validação cruzada mais detalhada;
-* [ ] Explorar técnicas adicionais de Explainable AI;
-* [ ] Implementar monitoramento do modelo;
-* [ ] Containerizar a aplicação utilizando Docker.
-
----
-
-## 👨‍💻 Autor
-
-**JONATAN TRINDADE**
-
-Projeto desenvolvido como parte do meu portfólio de **Data Science e Machine Learning**, com foco em classificação, avaliação de modelos e Explainable AI.
-
----
-
-⭐ Se este projeto foi útil ou interessante para você, considere deixar uma estrela no repositório!
+Jonatan Trindade — LinkedIn · GitHub
